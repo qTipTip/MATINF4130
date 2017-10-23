@@ -1,0 +1,134 @@
+\documentclass[12pt, oneside, a4paper, article]{memoir}
+
+\usepackage{microtype}
+\usepackage{geometry}
+\linespread{1.25}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{thmtools, mathtools, commath}
+\usepackage{minted}
+\usepackage{hyperref}
+\usepackage[noabbrev, capitalize]{cleveref}
+
+
+\newcommand{\mat}[1]{\boldsymbol{#1}}
+
+\title{ \textsc{Mandatory Assignment 1 \\
+MAT-INF4130}}
+\author{Ivar Haugal{\o}kken Stangeby}
+\begin{document}
+
+    \maketitle 
+       
+    \chapter*{Problem 1} 
+
+    In this problem we consider how to invert a lower triangular matrix. Recall
+    that a lower triangular matrix has a lower triangular inverse. Assume that
+    \( \mat{A} \in \mathbb{C}^{n\times n} \) is a lower triangular matrix with
+    \( \mat{B} \) its lower triangular inverse. In terms of block matrices we
+    have that
+    \begin{equation}
+        \mat{A}\mat{B} = \mat{A}[\mat{b}_1, \ldots, \mat{b}_n] = [\mat{e}_1,
+        \ldots, \mat{e}_n] = \mat{I}.
+    \end{equation}
+    Considering equation \( \mat{A}\mat{b}_k = \mat{e}_k \) and looking at the
+    \( k \)-th row in \( \mat{A} \) we see that
+    \begin{equation}
+        \sum_{i = 1}^n a_{ki}b_{ii} = 1.
+    \end{equation}
+    Since both \( \mat{A} \) and \( \mat{B} \) are lower triangular, this sum
+    reduces to \( a_{kk}b_{kk} = 1 \), and consequently \( b_{kk} = 1 / a_{kk}
+    \) for all \( k = 1, \ldots, n \).  In order to compute the rest of \(
+    \mat{b}_k \), consider the following system of matrices
+    \begin{equation}
+        \label{eq:kthstep}
+        \begin{bmatrix}
+            \mat{A}_{[k]} & \mat{0} \\
+            \mat{C} & \mat{\tilde{A}}
+        \end{bmatrix}
+        \begin{bmatrix}
+            \mat{b}_k^1 \\
+            \mat{b}_k^2
+        \end{bmatrix}
+        = 
+        \mat{e}_k.
+    \end{equation}
+    Here \( \mat{A}_{[k]} \) is the \emph{principal leading submatrix} of \(
+    \mat{A} \), while
+    \begin{equation}
+        \mat{b}_{k}^1 = [0, \ldots, 0, b_{kk}], \qquad \mat{b}_{k}^2 =
+        [b_{k+1, k}, \ldots, b_{nk}].
+    \end{equation}
+    Expanding this system yields the equation
+    \begin{equation}
+        \mat{\tilde{A}} \mat{b}_{k}^2 = -\mat{C}\mat{b}_k^1, 
+    \end{equation}
+    where the right hand side reduces to \( -\mat{A}((k+1)\mathord{:}n,
+    k)b_{kk} \) by the properties of \( \mat{e}_k \). We can therefore compute
+    \( \mat{B} \) by computing the diagonal elements, then solve the linear
+    system
+    \begin{equation}
+        \label{eq:linsystem}
+        \mat{A}((k+1)\mathord{:}n,
+        (k+1)\mathord{:}n)\mat{b}_k((k+1)\mathord{:}n) = -
+        \mat{A}((k+1)\mathord{:}n, k)b_{kk}
+    \end{equation}
+    for \( k = 1, \ldots, n - 1\).
+    
+    \subsection{Numerical Considerations} 
+    
+    For numerical efficiency it is feasible to do these computations inplace.
+    From \cref{eq:kthstep} we see that in the \(k\)-th step of the computation
+    we do not use the top right part of the matrix. Furthermore, the diagonal
+    elements are only used once and not in any subsequent computations, hence
+    we may safely replace these values by others. We can therefore store the
+    vectors \( \mat{b}_k^2 \) in place of \( \mat{A}(k, k \mathop{:} n) \).
+    After the computations are done, \( \mat{B} \) may be extracted from \(
+    \mat{A} \) by transposing and zeroing out the upper diagonals.
+
+    \chapter*{Problem 2}
+    
+    We are interested in the number of operations for computing the inverse of
+    a lower triangular matrix \( \mat{A} \in \mathbb{C}^{n\times n}\) following
+    the algorithm described above.  For \( k = 1, \ldots, n - 1 \), we compute
+    the diagonal element \( b_{kk} \) and solve the corresponding linear system
+    as given in \cref{eq:linsystem}. Each such system can be solved using a
+    solver relying on the fact that the matrix is lower triangular. Hence for
+    \( i = 1 , \ldots, n - k \) there are \( i \) multiplications and \( i - 1
+    \) additions. Letting \( N \) denote the total number of operations, we have
+    \begin{align}
+        N &= \sum_{k = 1}^{n-1} \sum_{i = 1}^{n-k} 2i - 1 = \sum_{k=1}^{n-1}(n-k)^2
+        \intertext{and the leading term is given by}
+        &\approx \int_{1}^{n-1} (n-k)^2 \dif{k} \approx \frac{1}{3}n^3.
+    \end{align}
+    The algorithm therefore has a time complexity of \( \mathcal{O}(n^3) \).
+    
+    \chapter*{Problem 3}
+    
+    \begin{listing}
+        \begin{minted}{python}
+from numpy import *
+
+n = 8
+A = matrix(random.random((n, n)))
+A = triu(A)
+U = A.copy()
+for k in range(n-1, -1, -1):
+  U[k, k] = 1 / U[k, k]
+  for r in range(k-1, -1, -1):
+     U[r, k] = -U[r, (r+1) : (k+1)] * U[(r+1) : (k+1), k] / U[r, r]
+print(U*A)
+        \end{minted}
+        \caption{Computing the upper triangular inverse of an upper triangular
+        matrix. Implemented in \textsc{Python}.}
+        \label{lst:code}
+    \end{listing}
+    We are tasked with discussing the code snipped given in \cref{lst:code}.
+    This is a \textsc{Python}-implementation of the algorithm discussed above for
+    computing the inverse of a triangular matrix. In this case, an upper
+    triangular one. The variables \texttt{r} and \texttt{k} represent the row
+    and column index respectively. Note that the computation is performed
+    in-place, and the inverse of \( \mat{A} \) is stored in memory allocated to
+    storing \( \mat{A} \). The final product \texttt{U * A} is the identity
+    matrix.
+ 
+\end{document}
