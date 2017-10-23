@@ -1,0 +1,123 @@
+\documentclass[12pt, oneside, article, a4paper]{memoir}
+
+
+\usepackage{bm}
+\usepackage{physics}
+\usepackage{geometry}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{microtype}
+\usepackage{mathtools}
+
+\newcommand{\mat}[1]{\bm{#1}}
+\linespread{1.25}
+
+\title{ \textsc{Mandatory Assignment 4} \\
+\textsc{MATINF4130}}
+\author{Ivar Stangeby}
+
+\begin{document}
+\maketitle
+
+\chapter*{Introduction}
+
+In this assignment we take a look at the PageRank algorithm, that helped
+establish \textsc{Google} as a powerful search engine.  The algorithm
+assigns to each web page its ``popularity'' in a way that mimics how a
+human would define a popular web page. Before discussing the algorithm
+itself, we start with a mathematical intermezzo.
+
+\paragraph*{Exercise 1}
+
+We first establish some notation. Let \( \mathcal{S} \) denote the unit
+simplex 
+\begin{equation}
+    \mathcal{S} \coloneqq \left\{ \mat{x} \in \mathbb{R}^n \mid x_i \geq
+    0 \text{ for  } i = 1, \ldots, n \text{ and } \sum_{i=1}^n x_i =
+1\right\}.
+\end{equation}
+For later, we note that this is a closed and bounded set, which in \(
+\mathbb{R}^n\) is equivalent to compact. We let \( \mat{A} \) be a real
+\( n \times n \) matrix with non-negative elements \( a_{ij} \geq 0 \),
+whose columns sum to one, and refer to this as a \emph{stochastic
+matrix}.  The image of \( \mathcal{S} \) under \( \mat{A} \) is denoted
+\begin{equation}
+    \mat{A}(\mathcal{S}) \coloneqq  \left\{ \mat{Ax} \mid \mat{x} \in
+    \mathcal{S} \right\}.
+\end{equation}
+
+\begin{enumerate}[a)]
+    \item If \( \mat{y} \in \mat{A}(\mathcal{S}) \) then \( \mat{y} = \mat{Ax}
+        \) for some \( \mat{x} \). Note that since both \( x_i \) and \( a_{ij}
+        \) are non-negative, we must have \( y_i \) non-negative for \( i = 1,
+        \ldots, n \). The sum
+        \begin{equation}
+            \sum_{i=1}^n y_i = \sum_{j=1}^n x_{j} \Big(\sum^{n}_{i=1}
+            a_{ij}\Big) = \sum_{j=1}^n x_j = 1
+        \end{equation}
+        tells us that \( \mat{y} \in \mathcal{S} \) and consequently \(
+        \mat{A}(\mathcal{S}) \subseteq \mathcal{S} \).
+
+    \item Considering \( \mat{A} \colon \mathcal{S} \to \mathcal{S} \) as a
+        linear operator, it suffices to show that it is bounded to show
+        continuity. We have that
+        \begin{equation}
+            \norm{\mat{A}}_1 = \max_{\norm{x} = 1}\norm{\mat{Ax}}_1 = 1
+        \end{equation}
+        so \( \mat{A} \) is bounded, and therefore also continuous in the \(
+        \norm{\cdot}_1 \) norm.
+    
+    \item Assume that \( (\lambda, \mat{v}) \) is an eigenpair for \( \mat{A}
+        \). Since \( \mat{Av} = \lambda \mat{v} \in \mathcal{S} \), we must
+        have \( |\lambda| \leq 1 \). Since \( \mathcal{S} \) is closed and
+        bounded it is compact, and since \( \mathcal{S} \) is continuous, it
+        follows by Brouwer's fixed-point theorem that there exists a  \(
+        \mat{w} \) such that
+        \begin{equation}
+            \mat{Aw} = \mat{w}.
+        \end{equation}
+        Consequently, \( (1, \mat{w}) \) is a right eigenpair for \( \mat{A}
+        \).
+
+        From now on, we assume that the matrix entries \( a_{ij}  \) are all
+        strictly positive. Denote by \( \mathcal{S}^\star \) the
+        \emph{interior} of \( \mathcal{S} \):
+        \begin{equation}
+            \mathcal{S}^\star \coloneqq \left\{ \mat{x} \in \mathcal{S}  \mid
+            x_i > 0 \text{ for  } i = 1, \ldots, n\right\}.
+        \end{equation}
+        
+    \item Let \( \mat{x} \in \mathcal{S} \) and set \( \mat{y} = \mat{Ax} \).
+        Since at least one of the elements \( x_i \) are non-negative, and all
+        \( a_{ij} \) are strictly positive, we have \( y_i > 0\) for all \( i =
+        1, \ldots, n \). This means that \(\mat{y} \in \mathcal{S}^\star \), so \(
+        \mat{A} \) maps \( \mathcal{S} \) to its interior.
+    
+    \item Let \( \mat{x}, \mat{y} \in \mat{S} \) be two distinct vectors. Since
+        the components of \( \mat{x} \) and the components of \( \mat{y} \) sum
+        to one, we have that the components of \( \mat{z} \coloneqq \mat{x} -
+        \mat{y} \) sum to zero. This means that since \( \mat{x} \) and \(
+        \mat{y} \) are different, \( \mat{z} \) is non-zero, hence \(z_j < 0 \)
+        for at least one \( j \). We will need this fact to achieve a strict
+        inequality. We have that
+        \begin{align}
+            \begin{split}
+            \norm{\mat{Ax} - \mat{Ay}}_1 = \norm{\mat{Az}}_1 &= \sum_{i = 1}^n |\sum_{j=1}^n a_{ij} z_j| \\
+                                                             &< \sum_{j = 1}^n \sum_{i=1}^n a_{ij}|z_j| \\ 
+                                                             &= \sum_{j=1}^n |z_j| = \norm{\mat{z}}_1 = \norm{\mat{x} - \mat{y}}_1
+    \end{split}
+        \end{align}
+        Consequently, \( \mat{A} \colon \mathcal{S} \to \mathcal{S} \) is a
+        \emph{contraction} in the \( \norm{\cdot}_1 \) norm.  Assume that \(
+        \mat{w}_1 \neq \mat{w}_2 \) are two distinct eigenvectors with
+        eigenvalue one. Then
+        \begin{equation}
+            \norm{\mat{w}_1 - \mat{w}_2}_1 = \norm{\mat{Aw}_1 - \mat{Aw}_2}_1 < \norm{\mat{w}_1 - \mat{w}_2}_1,
+        \end{equation}
+        which is a contradiction. We can therefore conclude that the geometric
+        multiplicity \( g(\lambda) \) of the eigenvalue \( \lambda = 1 \) is
+        one.
+\end{enumerate}
+
+
+
+\end{document}

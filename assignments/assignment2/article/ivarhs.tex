@@ -1,0 +1,224 @@
+\documentclass[oneside, a4paper, 12pt, article]{memoir}
+
+\usepackage{microtype}
+\usepackage{geometry}
+\linespread{1.25}
+
+\usepackage{booktabs}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{thmtools, mathtools, commath}
+\usepackage{minted}
+
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\newcommand{\mat}[1]{\boldsymbol{#1}}
+\newcommand{\Python}{\textsc{Python} }
+
+\title{\textsc{Mandatory Assignment 2} \\ \textsc{MAT-INF4130}}
+\author{Ivar Haugal{\o}kken Stangeby}
+\begin{document}
+    \maketitle     
+    
+    \chapter{Introduction}
+
+    In this assignment we discuss implementations of various numerical
+    algorithms for solving a linear system of the form 
+    \begin{equation} 
+        \mat{A} \mat{x} = \mat{b}, 
+    \end{equation}
+    where \( \mat{A} \in \mathbb{C}^{n\times n} \). The three algorithms of
+    choice are:
+    \begin{enumerate}
+        \item Gaussian elimination;
+        \item Gaussian elimination with pivoting; and
+        \item Householders triangulation.
+    \end{enumerate}
+    From the analysis of the algorithms, one can deduce that pivoting should
+    incur no additional cost, computationally speaking. Furthermore,
+    Householders triangulation should scale approximately at twice the rate as
+    Gaussian elimination. We will try to verify these claims in the following.
+    
+    \chapter{Implementation}
+    
+    All implementations has been done in \Python in a small library called
+    \textsc{NULL} (NUmerical Linear aLgebra). Each method has been tested with
+    the following linear system \( \mat{A}\mat{x} = \mat{b} \) where 
+    \begin{align}
+        \mat{A} = \begin{bmatrix}
+            1 & 1 & 2 \\
+            2 & 2 & 1 \\
+            1 & 2 & 3 
+        \end{bmatrix} \qquad \text{ and } \qquad
+        \mat{b} = \begin{bmatrix}
+            9 \\
+            9 \\
+            14
+        \end{bmatrix}.
+    \end{align} 
+    In this case, the solution is known to be \( \mat{x} = (1, 2, 3)^T \), and
+    the implementation can be tested by running \texttt{pytest matrixsolvers.py
+    -m test\_system} on the command-line.
+   
+    Since naive gaussian elimination leads to an \( LU \) factorization and
+    our matrix \( \mat{A} \) has a singular leading submatrix --- no such
+    factorization exists --- I have decided to interpret the distinction
+    between Gaussian elimination and Gaussian elimination with pivoting as the
+    former only using row switches, while the latter stores these row
+    operations in a permuation matrix.
+
+    \chapter{Results}
+    \subsection{Numerical Stability}
+    
+    By considering the matrix equation
+    \begin{equation}
+        \label{eq:relerrsystem}
+        \begin{bmatrix}
+            \varepsilon & 2 \\
+            1 & 1
+        \end{bmatrix}\mat{x} = \begin{bmatrix}
+            3 \\
+            4
+        \end{bmatrix}
+    \end{equation}
+    for \( \varepsilon = 10^{-12}, 10^{-14}, 10^{-16} \) we may uncover some
+    information about the numerical stability of the above methods.
+    By running the function \texttt{stability()}, we obtain the relative errors  
+    \begin{equation}
+        E_{\mathrm{rel}} \coloneqq \frac{\|\mat{A}\mat{x} - \mat{b}\|}{\| \mat{b}\|}.
+    \end{equation}
+    The results are given in \cref{tab:relative_error}. As \( \varepsilon \)
+    tends to zero, the solution tends to 
+    \begin{align}
+        \mat{x} = (5/2, 3/2)^T
+    \end{align}
+    and from the table we see that none of the algorithms above struggle with
+    numerical instability, however the Householder triangulation does have an
+    insignificant relative error.
+    
+    \begin{table}[htbp]
+        \centering
+        \renewcommand{\arraystretch}{1.3}
+        \begin{tabular}{@{}llll@{}}
+            \toprule
+            \(\varepsilon\) & GE  & GEP & Householder \\
+            \midrule
+            \(10^{-12}\) & 0& 0& \(8.88178\cdot10^{-17}\)\\
+            \(10^{-14}\) & 0& 0& \(8.88178\cdot10^{-17}\)\\
+            \(10^{-16}\) & 0& 0& \(8.88178\cdot10^{-17}\)\\
+            \bottomrule
+        \end{tabular} 
+        \caption{Relative errors when solving the system in
+        \cref{eq:relerrsystem} for the three algorithms discussed above.}
+        \label{tab:relative_error}
+    \end{table}
+
+    \subsection{Time Complexity}
+    
+    In order to examine the time complexity of the three algorithms we run the
+    algorithms on \( n \times n \) random matrices where \( n = 50 \cdot 2^m
+    \) for \( m = 0, \ldots, 5 \). Each solver is ran \( N = 5\) times and the
+    average of the elapsed time is computed. The results are plotted, and
+    shown in \cref{fig:time_complexity}. 
+    
+    We would expect that Gaussian Elimination and Gaussian Elimination with
+    pivoting perform about equally. However, according to the results, the
+    pivoting perform much better. This might be due to implementation, as the
+    pivoting method is vectorized to a higher extent and employs a \( PLU
+    \)-factorization.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{runtime.pdf}
+        \caption{The average runtime for each algorithm as a function of \( n \).}
+        \label{fig:time_complexity}
+    \end{figure}
+    
+    We also expect the Householder triangulation method to scale at twice the
+    cost of the Gaussian elimination, and according to the results, we see
+    that it does indeed scale approximately at twice the rate of the Gaussian
+    Elimination with pivots.
+    
+    \appendix
+
+    \chapter{Code Snippets}
+    
+    In the following we list a select few of the algorithms used.
+    The complete source code can be found at
+    the following link: \\
+    \begin{centering}
+        \url{https://github.com/qTipTip/NULL/blob/master/NULL/matrices.py} 
+    \end{centering}
+
+    \begin{listing}
+        \caption{Gaussian elimination with row interchanges.}
+    \begin{minted}{python}
+def gaussian_elimination(A, b):
+    """ 
+    Given a (nxn) matrix A and a right hand side b, computes x such that
+    Ax = b. 
+    """
+    
+    m, n = A.shape
+    U = A.copy() 
+    b = b.copy()
+
+    # forward sweep, reduce A to a upper triangular matrix
+    for k in range(min(m, n)):
+        swap = np.argmax(np.abs(U[k:, k])) + k
+        if U[swap, k] == 0:
+            raise ValueError('Singular matrix')
+        U[[k, swap], :] = U[[swap, k], :]
+        b[[k, swap]] = b[[swap, k]]
+        
+        for i in range(k + 1, m):
+            factor = U[i, k] / U[k, k]
+            b[i] = b[i] - factor*b[k]
+            U[i, k+1:] = U[i, k+1:] - U[k, k+1:] * factor
+            U[i, k] = 0
+    
+    # solve by back subistitution
+    x = rbackwardsolve(U, b, m)
+
+    return x 
+    \end{minted}
+    \end{listing}
+
+    \begin{listing}
+        \caption{Gaussian Elimination with partial pivoting}
+    \begin{minted}{python}
+def gaussian_elimination_pivots(A, b):
+    """
+    Given an nxn matrix A and a right hand side b, computes
+    the matrices P, L, U such that A = PLU,
+    then computes x such that LUx = (P.T)b.
+    """
+
+    P, L, U = PLU(A)
+    n,_ = A.shape
+    y = rforwardsolve(L, (P.T).dot(b), n)
+    x = rbackwardsolve(U, y, n)
+
+    return x         
+    \end{minted}
+    \end{listing}
+
+    \begin{listing}
+        \caption{Householder triangulation based solver}
+    \begin{minted}{python}
+def housetriang_solve(A, b):
+    """
+    Given an nxn matrix A and a right hand side b, computes the matrix R and
+    the vector c such that Rx = c, where R is upper triangular. Hence can be
+    solved by back-substitution.
+
+    n, _ = A.shape
+    b = np.reshape(b.copy(), (n, 1))
+    R, c = housetriang(A, b)
+    x = np.reshape(rbackwardsolve(R, c, n), (n,))
+
+
+    return x 
+    \end{minted} 
+    \end{listing}
+\end{document}
