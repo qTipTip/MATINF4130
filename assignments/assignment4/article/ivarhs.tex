@@ -7,6 +7,8 @@
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{microtype}
 \usepackage{mathtools}
+\usepackage{tikz}
+\usepackage{tikz-cd}
 
 \newcommand{\mat}[1]{\bm{#1}}
 \linespread{1.25}
@@ -18,7 +20,7 @@
 \begin{document}
 \maketitle
 
-\chapter*{Introduction}
+\chapter{Introduction}
 
 In this assignment we take a look at the PageRank algorithm, that helped
 establish \textsc{Google} as a powerful search engine.  The algorithm
@@ -26,7 +28,7 @@ assigns to each web page its ``popularity'' in a way that mimics how a
 human would define a popular web page. Before discussing the algorithm
 itself, we start with a mathematical intermezzo.
 
-\paragraph*{Exercise 1}
+\chapter{Mathematical framework}
 
 We first establish some notation. Let \( \mathcal{S} \) denote the unit
 simplex 
@@ -118,6 +120,86 @@ matrix}.  The image of \( \mathcal{S} \) under \( \mat{A} \) is denoted
         one.
 \end{enumerate}
 
+\chapter{The PageRank Algorithm}
 
+\section{Motivation}
 
+Any web page of has a set of \emph{forward links} which are links \emph{to}
+other pages, and a set of \emph{backlinks} which are links \emph{from} other
+pages. Intuitively, pages with a large amount of backlinks should be deemed as
+more popular than those with few backlinks. There is however one flaw with this
+interpretation, and that is if the set of backlinks all come from obscure,
+rarely visited websites, the real popularity of the page is certainly lower.
+However, if a page has a few backlinks, but these come from large popular
+websites, they should be qualify as more important. The PageRank algorithm
+attempts to formalize this.
+
+\section{Notation}
+
+In the following, we will assume we have \( n \) websites, and that the
+\emph{rank} or \emph{popularity} of page \( j \) is denoted \( p_j \).  We
+store the page ranks in a popularity vector \( \mat{p} \coloneqq [p_1, \ldots,
+p_n]^T \) which we assume to be normalized since we are only interested in the
+relative frequency. The total number of forward links from page \( j \) is
+denoted \( \ell_j \) and the set of pages with forward links to page \( i \) is
+denoted
+\begin{equation}
+B_i \coloneqq \left\{j \mid \text{ there is a link from page } j \text{ to page
+} i \right\}}.
+\end{equation}
+We let \( \mat{B} \) be the matrix with entries \(b_{ij} \) defined by
+\begin{equation}
+    b_{ij} \coloneqq \begin{cases}
+        \frac{1}{\ell_j} & \text{if there is a link from page \( j \) to page \( j \)}, \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+\section{The Algorithm}
+
+The idea is that the popularity of page \( i \) satisfies the following
+relation:
+\begin{equation}
+    p_i = \sum_{j \in B_i} \frac{1}{\ell_j} p_j.
+\end{equation}
+That is, every page distributes its popularity among its forward links. We are
+interested in finding the popularity vector \( \mat{p} \). Notice that this
+relation is equivalent to the following matrix equation being satisfied
+\begin{equation}
+    \mat{B}\mat{p} = \mat{p},
+\end{equation}
+hence we are looking for an eigenvector \( \mat{p} \) for \( \mat{B} \) with
+eigenvalue one.
+
+\begin{enumerate}[a)]
+
+    \item An initial question is, when does such an eigenvector exist? Based on
+        the work we did in earlier, we know that such an element exist if \(
+        \mat{B} \) turns out to be stochastic. The matrix \( \mat{B} \) is
+        stochastic precicely when each page has atleast one outgoing link, as
+        this ensures that none of the columns of \( \mat{B} \) are zero, and
+        then each column sum to one by construction. As an example, the 
+        set of pages shown here
+        \begin{equation} 
+            \begin{tikzcd}
+        1 \arrow[rr] \arrow[rd] &  & 2 \arrow[ld] \arrow[dd] \\
+         & 3 \arrow[ld] \arrow[rd] &  \\
+        4 \arrow[uu] \arrow[rr, bend right] &  & 5 \arrow[uu, bend right] \arrow[ll]
+            \end{tikzcd}
+        \end{equation}
+        is associated to a stochastic matrix \( \mat{B} \) given by
+        \begin{equation}
+            \mat{B} = \frac{1}{2} \begin{bmatrix}
+                0 & 0 & 0 & 1 & 0 \\
+                1 & 0 & 0 & 0 & 1 \\
+                1 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 & 1 \\
+                0 & 1 & 1 & 1 & 0
+            \end{bmatrix}
+        \end{equation}
+        and solving the equation \( \mat{Bp} = \mat{p} \) yields a popularity vector of
+        \begin{equation}
+            \mat{p} \approx 
+        \end{equation}
+        
 \end{document}

@@ -3,6 +3,7 @@
 \usepackage{listings}
 \usepackage{xcolor-solarized}
 \usepackage{inconsolata}
+\usepackage{graphicx}
 \lstset{
     language=Python,
     showstringspaces=false,
@@ -15,7 +16,6 @@
     frame=lines,
     identifierstyle=\color{solarized-base00},
     sensitive=true,
-    xleftmargin=\parindent,
     escapechar=\%
 }
 
@@ -108,7 +108,9 @@ equality follows in \cref{eq:proj_goal}.
 \chapter*{Exercise 2}
 
 Let \( \mat{X} = \mat{U}\mat{\Sigma}\mat{V}^T \) be a singular value
-decomposition of \( \mat{X} \). We wish to show that
+decomposition of \( \mat{X} \). 
+\begin{enumerate}[a)]
+    \item We wish to show that
 \begin{equation}
     \frob{\mat{X}^T \mat{W}}^2 = \frob{\mat{\Sigma}^T\mat{U^T}\mat{W}}^2.
 \end{equation}
@@ -127,7 +129,9 @@ have
     \mat{a}_{:j} }_2 = \frob{\mat{A}}.
 \end{align}
 Setting \( \mat{B} \coloneqq \mat{V} \) and \( \mat{A} \coloneqq \mat{\Sigma^T
-U^T W}\) in \cref{eq:frob_unitary} and squaring proves the result.  We now wish
+U^T W}\) in \cref{eq:frob_unitary} and squaring proves the result.  
+
+\item We now wish
 to show that
 \begin{equation}
     \frob{\mat{X}^T\mat{W}} = \sum_{i=1}^m
@@ -145,13 +149,16 @@ for \( i = 1, \ldots, m \) and \( j = 1, \ldots, m - k \). Pre-multiplying by
 \end{equation}
 We can therefore write the Frobenius norm of this matrix as
 \begin{align*}
-    \frob{\mat{\Sigma}^T\mat{U}^T\mat{W}}^2 = \sum_{i=1}^m \sigma_i^2 \sum_{j=1}^{m-k} \langle \mat{u}_i, \mat{w}_{j+k}\rangle  = \sum_{i=1}^m \sigma_i^2 \norm{\proj_{W^\perp}(\mat{u}_i)}_2^2
+    \frob{\mat{\Sigma}^T\mat{U}^T\mat{W}}^2 = \sum_{i=1}^m \sigma_i^2
+    \sum_{j=1}^{m-k} \langle \mat{u}_i, \mat{w}_{j+k}\rangle  = \sum_{i=1}^m
+    \sigma_i^2 \norm{\proj_{W^\perp}(\mat{u}_i)}_2^2
 \end{align*}
 as we wanted to show. Note that the singular values are ordered by convention
 \( \sigma_1 \geq \ldots \sigma_m \geq 0 \).
 
-We also have the property that since the columns of \( \mat{W} \) are
-orthonormal, and since there are \( m - k \) such columns, that 
+
+\item We also have the property that since the columns of \( \mat{W} \) are
+    orthonormal, and since there are \( m - k \) such columns, that 
 \begin{equation}
     \frob{\mat{W}}^2 = m - k.
 \end{equation}
@@ -159,58 +166,98 @@ Since \( \mat{U}^T \) is unitary, we have that
 \begin{align}
     \frob{\mat{W}}^2 = \frob{\mat{U}^T\mat{W}}^2 = \sum_{i=1}^m \sum_{j=k+1}^m \langle \mat{u}_i, \mat{w}_j \rangle^2 = \sum_{i=1}^m \norm{\proj_{W^\perp}(\mat{u}_i)}^2_2.
 \end{align}
-
+\end{enumerate}
 \chapter*{Exercise 3}
+\begin{enumerate}[a)]
+    \item We can now find the ``distance to the best subspace'' \(
+        \frob{\mat{X}^T\mat{W}}^2 \) by solving the minimization problem
+        \begin{equation}
+            \min \sum_{i=1}^m \sigma_i^2 \kappa_i
+        \end{equation}
+        where \( 0 \leq \kappa_i \leq 1 \) and \( \sum_{i=1}^m \kappa_i = m - k \).
+        Indeed, we have
+        \begin{equation}
+            \frob{\mat{X}^T\mat{W}}^2 = \sum_{i = 1}^m \sigma_i^2 \norm{\proj_{W^\perp}(\mat{u}_i)}^2_2
+        \end{equation}
+        where setting \( \kappa_i \coloneqq \norm{\proj_{W^\perp}(\mat{u}_i)}_2^2 \)
+        yields the above sum. Furthermore, we have that \( 0 \leq \kappa_i \leq 1 \)
+        since the \( \mat{u}_i\)'s are orthonormal, and we showed above that \(
+        \sum_{i=1}^m \kappa_i = m - k \).
 
-We can now find the ``distance to the best subspace'' \(
-\frob{\mat{X}^T\mat{W}}^2 \) by solving the minimization problem
-\begin{equation}
-    \min \sum_{i=1}^m \sigma_i^2 \kappa_i
-\end{equation}
-where \( 0 \leq \kappa_i \leq 1 \) and \( \sum_{i=1}^m \kappa_i = m - k \).
-Indeed, we have
-\begin{equation}
-    \frob{\mat{X}^T\mat{W}}^2 = \sum_{i = 1}^m \sigma_i^2 \norm{\proj_{W^\perp}(\mat{u}_i)}^2_2
-\end{equation}
-where setting \( \kappa_i \coloneqq \proj_{W^\perp}(\mat{u}_i) \) yields the
-above sum. Furthermore, we have that \( 0 \leq \kappa_i \leq 1 \) since the \(
-\mat{u}_i\)'s are orthonormal, and we showed above that \( \sum_{i=1}^m \kappa_i
-= m - k \).
+\item The solution to this problem is obtained by setting \( \kappa_1 = \ldots
+    = \kappa_k = 0 \) and \( \kappa_{k+1} = \ldots = \kappa_{m} = 1 \), since
+    the \( \sigma_i\)'s are ordered by magnitude. Indeed, the sum is minimized
+    if we chose the vectors such that the columns of \( \mat{W} \) are
+    perpendicular to \( \Span({\mat{u_1}, \ldots, \mat{u}_k}) \). Since \( 0
+    \leq \kappa_i \leq 1 \), this means in order for \( \sum_{i = 1}^m = m - k
+    \), we must have \( \kappa_{k+1} = \ldots = \kappa_{m} = 1\).
 
-The solution to this problem is obtained by setting \( \kappa_1 = \ldots =
-\kappa_k = 0 \) and \( \kappa_{k+1} = \ldots = \kappa_{m} = 1 \), since the \(
-\sigma_i\)'s are ordered by magnitude. Indeed, the sum is minimized if we chose
-the vectors such that \( W \) is perpendicular to \( \Span({\mat{u_1},
-\ldots, \mat{u}_k}) \). Since \( 0 \leq \kappa_i \leq 1 \), this means in order
-for \( \sum_{i = 1}^m = m - k \), we must have \( \kappa_{k+1} = \ldots =
-\kappa_{m} = 1\).
-
-We can therefore choose the matrix \( \mat{W} \) to consist of the last \( m -
-k \) vectors \( \mat{u}_{k+1}, \ldots, \mat{u}_{m} \) and let \( W^\perp =
-\Span(\mat{u}_{k+1}, \ldots, \mat{u}_m) \). This set of vectors satisfies the
-minimization problem discussed above.
-We implement a routine for solving this minimization problem in
-\textsc{Python}. 
+\item We can therefore choose the matrix \( \mat{W} \) to consist of the last
+    \( m - k \) vectors \( \mat{u}_{k+1}, \ldots, \mat{u}_{m} \) and let \(
+    W^\perp = \Span(\mat{u}_{k+1}, \ldots, \mat{u}_m) \). This set of vectors
+    satisfies the minimization problem discussed above.  
+    
+\item We implement a routine for solving this minimization problem in
+    \textsc{Python}. 
 
 \begin{lstlisting}{language=Python}
-import numpy as np
-import numpy.linalg as la
 def bestfit(X, k):
-    """
-    :param X: mxn matrix
-    :param k: k <= m integer
-    :returns B, dist: set of basis vectors, and total 
-        distance to subspace
-    """
-    m, n = X.shape
-    U, S, V = la.svd(X)
-    B = [:, k:]
-    dist =  la.norm(X.T.dot(W))
+    U = np.linalg.svd(X)[0]
+    B = U[:, :k]
+    W = U[:, k:]
+    dist = np.linalg.norm(X.T.dot(W))
     return B, dist
 \end{lstlisting}
-
+\end{enumerate}
 \chapter*{Exercise 4}
 
+We can alternatively choose to implement a ``vanilla'' least squares, where we
+view the first \( k \) components of each column in \( \mat{X} \) as input data
+and the last \( m - k \) components of each column as output data. By defining
+\( \mat{Y} \coloneqq \mat{X}_{1:k, 1:n} \) and \( \mat{Z} \coloneqq
+\mat{X}_{k+1:m, 1:n} \), we seek the matrix \( \mat{A} \) that minimizes
+\begin{equation}
+    \frob{\mat{AY}-\mat{Z}}.
+\end{equation}
+\begin{enumerate}[a)]
+    \item It can be shown that if \( \mat{A} \) solves the least squares problem, then it
+must satisfy the relation
+\begin{equation}
+    \mat{A}^T = (\mat{YY^T})^{-1} \mat{YZ}^T,
+\end{equation}
+however I was not successful in proving this.
 
+\item 
+We implement vanilla least squares in \textsc{Python}:
+\begin{lstlisting}{language=python}
+def vanleastsqr(X, k):
+    Y = X[0:k, 0:]
+    Z = X[k:, 0:]
+    A = la.inv(Y.dot(Y.T)).dot(Y).dot(Z.T).T
+    dist = la.norm(A.dot(Y) - Z)
+    return A, dist
+\end{lstlisting}
+\end{enumerate}
 
+\section*{Exercise 5}
+
+The two algorithms previously discussed are tested on two test \( 2 \times 21
+\) matrices \( \mat{X}_0 \) and \( \mat{X}_1 \). The first row of matrix \(
+\mat{X}_1 \) contains 21 uniformly spaced values between -1 and 1, while the
+second row contains uniformly random numbers between -1 and 1. All the elements
+in \( \mat{X}_2 \) are random.
+
+As we see from
+\cref{fig:result}, the ``bestfit'' algorithm provides a better fit in both
+cases. This might be due to numerical instability in the computation of the
+inverse in the vanilla least squares.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{pictures/best_subspace.pdf}
+    \caption{Two approaches to the least squares problem of finding the best
+    subspace. As we see, the fit is better for the ``bestfit'' algorithm, in
+both cases.}
+    \label{fig:result}
+\end{figure}
 \end{document}
