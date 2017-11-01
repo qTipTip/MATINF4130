@@ -10,6 +10,10 @@
 \usepackage{tikz}
 \usepackage{tikz-cd}
 
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{varioref}
+
 \newcommand{\mat}[1]{\bm{#1}}
 \linespread{1.25}
 
@@ -31,7 +35,7 @@ itself, we start with a mathematical intermezzo.
 \chapter{Mathematical framework}
 
 We first establish some notation. Let \( \mathcal{S} \) denote the unit
-simplex 
+simplex
 \begin{equation}
     \mathcal{S} \coloneqq \left\{ \mat{x} \in \mathbb{R}^n \mid x_i \geq
     0 \text{ for  } i = 1, \ldots, n \text{ and } \sum_{i=1}^n x_i =
@@ -67,7 +71,7 @@ matrix}.  The image of \( \mathcal{S} \) under \( \mat{A} \) is denoted
         \end{equation}
         so \( \mat{A} \) is bounded, and therefore also continuous in the \(
         \norm{\cdot}_1 \) norm.
-    
+
     \item Assume that \( (\lambda, \mat{v}) \) is an eigenpair for \( \mat{A}
         \). Since \( \mat{Av} = \lambda \mat{v} \in \mathcal{S} \), we must
         have \( |\lambda| \leq 1 \). Since \( \mathcal{S} \) is closed and
@@ -87,14 +91,14 @@ matrix}.  The image of \( \mathcal{S} \) under \( \mat{A} \) is denoted
             \mathcal{S}^\star \coloneqq \left\{ \mat{x} \in \mathcal{S}  \mid
             x_i > 0 \text{ for  } i = 1, \ldots, n\right\}.
         \end{equation}
-        
+
     \item Let \( \mat{x} \in \mathcal{S} \) and set \( \mat{y} = \mat{Ax} \).
         Since at least one of the elements \( x_i \) are non-negative, and all
         \( a_{ij} \) are strictly positive, we have \( y_i > 0\) for all \( i =
         1, \ldots, n \). This means that \(\mat{y} \in \mathcal{S}^\star \), so \(
         \mat{A} \) maps \( \mathcal{S} \) to its interior.
-    
-    \item Let \( \mat{x}, \mat{y} \in \mat{S} \) be two distinct vectors. Since
+
+    \item\label{it:contract}Let \( \mat{x}, \mat{y} \in \mat{S} \) be two distinct vectors. Since
         the components of \( \mat{x} \) and the components of \( \mat{y} \) sum
         to one, we have that the components of \( \mat{z} \coloneqq \mat{x} -
         \mat{y} \) sum to zero. This means that since \( \mat{x} \) and \(
@@ -104,7 +108,7 @@ matrix}.  The image of \( \mathcal{S} \) under \( \mat{A} \) is denoted
         \begin{align}
             \begin{split}
             \norm{\mat{Ax} - \mat{Ay}}_1 = \norm{\mat{Az}}_1 &= \sum_{i = 1}^n |\sum_{j=1}^n a_{ij} z_j| \\
-                                                             &< \sum_{j = 1}^n \sum_{i=1}^n a_{ij}|z_j| \\ 
+                                                             &< \sum_{j = 1}^n \sum_{i=1}^n a_{ij}|z_j| \\
                                                              &= \sum_{j=1}^n |z_j| = \norm{\mat{z}}_1 = \norm{\mat{x} - \mat{y}}_1
     \end{split}
         \end{align}
@@ -178,9 +182,9 @@ eigenvalue one.
         \mat{B} \) turns out to be stochastic. The matrix \( \mat{B} \) is
         stochastic precicely when each page has atleast one outgoing link, as
         this ensures that none of the columns of \( \mat{B} \) are zero, and
-        then each column sum to one by construction. As an example, the 
+        then each column sum to one by construction. As an example, the
         set of pages shown here
-        \begin{equation} 
+        \begin{equation}
             \begin{tikzcd}
         1 \arrow[rr] \arrow[rd] &  & 2 \arrow[ld] \arrow[dd] \\
          & 3 \arrow[ld] \arrow[rd] &  \\
@@ -199,7 +203,59 @@ eigenvalue one.
         \end{equation}
         and solving the equation \( \mat{Bp} = \mat{p} \) yields a popularity vector of
         \begin{equation}
-            \mat{p} \approx 
+            \mat{p} \approx
         \end{equation}
-        
+
+    \item We want to formulate an iteration scheme for the approximate solution
+        to the equation \( \mat{Bp} = \mat{p} \). We may start with an
+        arbitrary vector \( \mat{p}^0 \in \mathcal{S} \), and define \(
+        \mat{p}^{k+1}  \coloneqq \mat{Bp}^k \) for \( k = 0, 1, 2, \ldots \),
+        however we are not guaranteed that \( \mat{B} \) is stochastic.
+        We therefore introduce the modified matrix \( \mat{X} \) defined by
+        \begin{equation}
+            \mat{X} \coloneqq \mat{B} + \frac{1}{n} \mat{C}
+        \end{equation}
+        where \( \mat{C} \) is an averaging matrix that fills out any zero
+        columns of \( \mat{B} \) so that the columns sum to one. That is,
+        \begin{equation}
+            c_{ij} \coloneqq \begin{cases}
+                1, & \mat{B}_{:, j} = \mat{0},\\
+                0 & \text{otherwise}.
+            \end{cases}
+        \end{equation}
+        This ensures that the matrix \( \mat{X} \) is stochastic. In order to
+        make sure that the iteration converges, we introduce another modified
+        matrix \( \mat{A} \)
+        \begin{equation}
+            \mat{A} \coloneqq \alpha \mat{X} + (1 - \alpha) \frac{1}{n} \mat{1},
+        \end{equation}
+        where \( \alpha \in (0, 1)\) and \( \mat{1} \) is an \( n\times n\)
+        matrix filled with ones. This modification ensures that \( \mat{A} \)
+        is a contraction (cf. exercise \vref{it:contract}).  The sequence \(
+        \left\{ \mat{p}^k \right\}_{k=1}^\infty \) with \( \mat{p}^0 \in
+        \mathcal{S} \) and
+        \begin{equation}
+            \mat{p}^{k+1} = \mat{Ap}^k
+        \end{equation}
+        therefore converges to a unique \( \mat{p} \) that solves \( \mat{Bp} =
+        \mat{p} \).  Writing out the iteration we have
+        \begin{equation}
+            \mat{p}^{k+1} = \alpha \mat{Bp}^k  + \frac{\alpha}{n} \mat{Cp}^k +
+            \frac{1 - \alpha}{n} \mat{1p}^k
+        \end{equation}
+        The matrix products \( \mat{Cp}^k \) and \( \mat{1p}^1 \) are large
+        linear systems, and it is worthwile to spend some time considering
+        them.  Since \( \mat{B} \) is known, we know exactly what columns of \(
+        \mat{B} \) are zero. Assume there are \( k \) zero-columns in \(
+        \mat{B} \) with indices of these columns as \( i_1, \ldots, i_k \). We
+        may then set
+        \begin{equation}
+            \mat{Cp}^k(j) = p_{i_1} + \ldots + p_{i_k} 
+        \end{equation}
+        for \( j = 1, \ldots, n \).  Similarly, we may directly compute the
+        elements of \( \mat{1p}^ \) as
+        \begin{equation}
+            \mat{1p}^k(j) = p_1 + \ldots + p_n 
+        \end{equation}
+        for all \( j \).
 \end{document}
