@@ -39,13 +39,14 @@ def page_rank_iterate(B, alpha=0.85, maxiter=100, residual=True):
     M, N = B.shape 
     p = np.random.random(size=(N, 1)) # random initial vector
     p = p / p.sum(axis=0)             # normalize p 
-    r = np.zeros(maxiter)
+
+    r = np.zeros(maxiter)             # array for residuals
     
-    non_zero_col_index = np.where(~B.any(axis=0))[0]
-    non_zero_row_index = np.where(~B.any(axis=1))[0]
+    zero_col_index = np.where(~B.any(axis=0))[0] # indices corresponding to zero-columns
+
     for iteration in range(maxiter):
-        Cpk = alpha / N * np.sum(p[non_zero_col_index]) 
-        Opk = (1 - alpha)/ N * np.full((N, 1), sum(p))
+        Cpk = alpha / N * np.sum(p[zero_col_index])    # correction terms
+        Opk = (1 - alpha)/ N * sum(p) # correction terms
         p_new = alpha * B.dot(p) + Cpk + Opk
         if residual:
             r[iteration] = np.linalg.norm(p_new - p)
@@ -69,6 +70,7 @@ def test_assemble_matrix():
     ])
     
     np.testing.assert_almost_equal(computed_B, expected_B)
+
 def test_pagerank():
     B = (1/2) * np.array([
         [0, 0, 0, 1, 0],
@@ -93,8 +95,9 @@ def test_pagerank():
 if __name__ == "__main__":
     L = read_network('network.dat')
     B = assemble_B_matrix(L, 10000)
-    p, r = page_rank_iterate(B, maxiter=50, residual=True)
+    p, r = page_rank_iterate(B, maxiter=100, residual=True)
     
+    print('Total: ', sum(p)) 
     plt.plot(r)
     plt.xlabel('Iteration number')
     plt.ylabel('Residual error')
@@ -102,4 +105,4 @@ if __name__ == "__main__":
     plt.savefig('convergence.pdf')
     
     for i in np.argsort(-p)[:10]:
-        print("Page #{} \t Popularity {:.3g}%".format(i, p[i]))
+        print("Page #{} \t Popularity {:.3g}%".format(i, 100*p[i]))
